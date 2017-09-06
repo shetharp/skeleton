@@ -30,7 +30,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class TagsRecord extends UpdatableRecordImpl<TagsRecord> implements Record4<Integer, Time, Integer, String> {
 
-	private static final long serialVersionUID = -1013404358;
+	private static final long serialVersionUID = -1350112229;
 
 	/**
 	 * Setter for <code>public.tags.id</code>.
@@ -75,16 +75,16 @@ public class TagsRecord extends UpdatableRecordImpl<TagsRecord> implements Recor
 	}
 
 	/**
-	 * Setter for <code>public.tags.tag_name</code>.
+	 * Setter for <code>public.tags.name</code>.
 	 */
-	public void setTagName(String value) {
+	public void setName(String value) {
 		setValue(3, value);
 	}
 
 	/**
-	 * Getter for <code>public.tags.tag_name</code>.
+	 * Getter for <code>public.tags.name</code>.
 	 */
-	public String getTagName() {
+	public String getName() {
 		return (String) getValue(3);
 	}
 
@@ -149,7 +149,7 @@ public class TagsRecord extends UpdatableRecordImpl<TagsRecord> implements Recor
 	 */
 	@Override
 	public Field<String> field4() {
-		return Tags.TAGS.TAG_NAME;
+		return Tags.TAGS.NAME;
 	}
 
 	/**
@@ -181,7 +181,7 @@ public class TagsRecord extends UpdatableRecordImpl<TagsRecord> implements Recor
 	 */
 	@Override
 	public String value4() {
-		return getTagName();
+		return getName();
 	}
 
 	/**
@@ -216,7 +216,7 @@ public class TagsRecord extends UpdatableRecordImpl<TagsRecord> implements Recor
 	 */
 	@Override
 	public TagsRecord value4(String value) {
-		setTagName(value);
+		setName(value);
 		return this;
 	}
 
@@ -246,12 +246,12 @@ public class TagsRecord extends UpdatableRecordImpl<TagsRecord> implements Recor
 	/**
 	 * Create a detached, initialised TagsRecord
 	 */
-	public TagsRecord(Integer id, Time uploaded, Integer receiptId, String tagName) {
+	public TagsRecord(Integer id, Time uploaded, Integer receiptId, String name) {
 		super(Tags.TAGS);
 
 		setValue(0, id);
 		setValue(1, uploaded);
 		setValue(2, receiptId);
-		setValue(3, tagName);
+		setValue(3, name);
 	}
 }

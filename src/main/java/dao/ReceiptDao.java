@@ -11,6 +11,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
 import static generated.Tables.RECEIPTS;
+import static generated.Tables.TAGS;
 
 public class ReceiptDao {
     DSLContext dsl;
@@ -31,7 +32,24 @@ public class ReceiptDao {
         return receiptsRecord.getId();
     }
 
+    public Boolean exists(Integer receiptID) {
+        return dsl.fetchExists(dsl.selectOne().from(RECEIPTS)
+                .where(RECEIPTS.ID.eq(receiptID)));
+    }
+
     public List<ReceiptsRecord> getAllReceipts() {
         return dsl.selectFrom(RECEIPTS).fetch();
     }
+
+    public List<ReceiptsRecord> getReceiptsByTag(String tagName) {
+        return dsl
+                .select()
+                .from(RECEIPTS)
+                .join(TAGS)
+                .on(TAGS.RECEIPT_ID.eq(RECEIPTS.ID))
+                .where(TAGS.NAME.eq(tagName))
+                .fetchInto(RECEIPTS);
+    }
 }
+
+

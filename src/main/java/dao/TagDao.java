@@ -36,9 +36,25 @@ public class TagDao {
         return dsl.selectFrom(TAGS).fetch();
     }
 
-    public Integer getTagID(String tagName) {
-        return dsl.selectFrom(TAGS)
-                .where(TAGS.NAME.eq(tagName))
-                .fetchOne(TAGS.ID);
+    public void toggle(Integer receiptID, String tagName){
+        TagsRecord tagsRecord = dsl
+                .selectFrom(TAGS)
+                .where(TAGS.RECEIPT_ID.eq(receiptID))
+                .and(TAGS.NAME.eq(tagName))
+                .fetchOne();
+
+        if (tagsRecord != null) {
+            tagsRecord.delete();
+            return;
+        }
+        else {
+            tagsRecord = dsl
+                    .insertInto(TAGS, TAGS.RECEIPT_ID, TAGS.NAME)
+                    .values(receiptID, tagName)
+                    .returning(TAGS.ID)
+                    .fetchOne();
+
+            checkState(tagsRecord != null && tagsRecord.getId() != null, "Insert Tag failed");
+        }
     }
 }

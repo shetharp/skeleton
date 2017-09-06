@@ -15,9 +15,9 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
-@Path("/tags")
+@Path("/tags/{tag}")
 @Consumes(MediaType.APPLICATION_JSON)
-//@Produces(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class TagController {
     final ReceiptDao receipts;
     final TagDao tags;
@@ -33,10 +33,19 @@ public class TagController {
 //    }
 
     @GET
-    @Path("/tags/{tag}")
     public List<ReceiptResponse> getReceipts(@PathParam("tag") String tagName) {
-        Integer tagID = tags.getTagID(tagName);
-        List<ReceiptsRecord> receiptRecords = receipts.getReceiptsByTag(tagID);
+        List<ReceiptsRecord> receiptRecords = receipts.getReceiptsByTag(tagName);
         return receiptRecords.stream().map(ReceiptResponse::new).collect(toList());
     }
+
+    @PUT
+    public void toggleTag(@PathParam("tag") String tagName, @Valid @NotNull int receiptID) {
+        if (receipts.exists(receiptID)) {
+            tags.toggle(receiptID, tagName);
+        }
+        else {
+            throw new NotFoundException();
+        }
+    }
+
 }

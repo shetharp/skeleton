@@ -20,18 +20,6 @@ public class TagDao {
         this.dsl = DSL.using(jooqConfig);
     }
 
-    public int insert(String tagName) {
-        TagsRecord tagsRecord = dsl
-                .insertInto(TAGS, TAGS.NAME)
-                .values(tagName)
-                .returning(TAGS.ID)
-                .fetchOne();
-
-        checkState(tagsRecord != null && tagsRecord.getId() != null, "Inserting Tags failed");
-
-        return tagsRecord.getId();
-    }
-
     public List<TagsRecord> getAllTags() {
         return dsl.selectFrom(TAGS).fetch();
     }

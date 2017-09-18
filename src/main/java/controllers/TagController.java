@@ -44,7 +44,7 @@ public class TagController {
             tags.toggle(receiptID, tagName);
         }
         else {
-            throw new NotFoundException();
+            throw new NotFoundException("Receipt does not exist.");
         }
     }
 

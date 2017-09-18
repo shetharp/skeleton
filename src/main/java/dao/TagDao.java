@@ -4,6 +4,8 @@ import generated.tables.records.ReceiptsRecord;
 import generated.tables.records.TagsRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.Record1;
+import org.jooq.Result;
 import org.jooq.impl.DSL;
 
 import java.math.BigDecimal;
@@ -45,4 +47,16 @@ public class TagDao {
             checkState(tagsRecord != null && tagsRecord.getId() != null, "Insert Tag failed");
         }
     }
+
+
+//    public List<String> getTagsByReceipt(Integer receiptID) {
+//       List<TagsRecord> tagRecs = dsl
+//                .select(TAGS.NAME)
+//                .from(TAGS)
+//                .where(RECEIPTS.ID.eq(receiptID))
+//                .fetchInto(TAGS);
+//
+//       return tagRecs;
+//    }
+
 }

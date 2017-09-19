@@ -242,6 +242,9 @@
                         <!--<div><span class="receiptTag">t1</span></div>-->
                     </div>
                 `).appendTo($("#receiptList"));
+
+                // Once the row has been added, attach an event listener to its add-tag button
+                addTagEvent(receipt.id)
             }
 
 
@@ -250,9 +253,9 @@
              * Given a receipt object, append a receipt row to the table.
              * Returns: Nothing. Side-effect: New row added to receipt list table.
             ==================================================================================================== */
-            function appendTag(receipt, tag) {
+            function appendTag(receiptID, tag) {
                 $(`<span id=${"tag-" + tag.id} class="tagValue">${tag.name}</span>`)
-                    .appendTo($("#" + receipt.id + "-tags"))
+                    .appendTo($("#" + receiptID + "-tags"))
                     .click(function(){
                         /* ======================================================================
                          * If the user clicks on an existing tag,
@@ -262,7 +265,7 @@
                         $.ajax({
                             type: "PUT",
                             url: "/tags/" + tag.name,
-                            data: JSON.stringify(receipt.id),
+                            data: JSON.stringify(receiptID),
                             dataType: "json",
                             contentType: "application/json",
                             success: function(tagID){
@@ -286,7 +289,7 @@
             ==================================================================================================== */
             function appendTags(receipt) {
                 receipt.tags.forEach(function(tag){
-                    appendTag(receipt, tag);
+                    appendTag(receipt.id, tag);
                 })
             }
 
@@ -317,8 +320,7 @@
                 // For each receipt, add it as a row to the frontend receipt list table
                 receiptsData.forEach(function(receipt){
                     appendReceiptRow(receipt);
-                    appendTags(receipt)
-                    addTagEvent(receipt.id)
+                    appendTags(receipt);
                 });
 
                 console.log(receiptsData);
@@ -461,7 +463,10 @@
                                         dataType: "json",
                                         contentType: "application/json",
                                         success: function(tagID){
-                                            console.log(tagID);
+                                            var tag = {id: tagID, name: tagName};
+                                            appendTag(receiptID, tag);
+                                            $("#" + receiptID + "-tagName").remove();
+                                            addBtn.data("hideInput", true);
                                         },
                                     });
                                 }

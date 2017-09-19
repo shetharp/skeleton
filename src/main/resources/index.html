@@ -250,12 +250,32 @@
              * Given a receipt object, append a receipt row to the table.
              * Returns: Nothing. Side-effect: New row added to receipt list table.
             ==================================================================================================== */
-            function appendTags(receipt) {
-                receipt.tags.forEach(function(tag){
-                    $(`
-                        <span class="tagValue">${tag.name}</span>
-                    `).appendTo($("#" + receipt.id + "-tags"));
-                })
+            function appendTag(receipt, tag) {
+                $(`<span id=${"tag-" + tag.id} class="tagValue">${tag.name}</span>`)
+                    .appendTo($("#" + receipt.id + "-tags"))
+                    .click(function(){
+                        /* ======================================================================
+                         * If the user clicks on an existing tag,
+                         * Make a PUT request to the API for the given tag name and receipt id
+                         * to delete the tag
+                        ====================================================================== */
+                        $.ajax({
+                            type: "PUT",
+                            url: "/tags/" + tag.name,
+                            data: JSON.stringify(receipt.id),
+                            dataType: "json",
+                            contentType: "application/json",
+                            success: function(tagID){
+                                if (tagID == -1) {
+                                    $("#tag-" + tag.id).remove()
+                                    console.log("Removed tag: " + JSON.stringify(tag));
+                                }
+                                else {
+                                    console.log("Unable to remove tag.");
+                                }
+                            },
+                        });
+                    });
             }
 
 
@@ -263,14 +283,12 @@
              * HELPER DISPLAY FUNCTION
              * Given a receipt object, append a receipt row to the table.
              * Returns: Nothing. Side-effect: New row added to receipt list table.
-//            ==================================================================================================== */
-//            function appendTag(receipt) {
-//                receipt.tags.forEach(function(tag){
-//                    $(`
-//                        <span class="tagValue">${tag.name}</span>
-//                    `).appendTo($("#" + receipt.id + "-tags"));
-//                })
-//            }
+            ==================================================================================================== */
+            function appendTags(receipt) {
+                receipt.tags.forEach(function(tag){
+                    appendTag(receipt, tag);
+                })
+            }
 
 
             /* ====================================================================================================

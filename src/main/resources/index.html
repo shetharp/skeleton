@@ -16,7 +16,6 @@
             font-family: "Segoe UI", "Helvetica", sans-serif;
             font-size: 10px;
             margin: 5rem;
-            overflow: hidden;
         }
 
         #container {
@@ -104,19 +103,23 @@
             border-bottom: 2px solid #dfdfdf;
         }
 
-        .col-sm {
+
+        .col-1 {
             width: 12.5%;
+            color: #afafaf;
         }
 
-        .col-md {
+        .col-2 {
             width: 25%;
         }
-        .col-lg {
-            width: 50%;
+
+        .col-3 {
+            width: 10%;
+            text-align: right;
         }
 
-        .time {
-            color: #afafaf;
+        .col-4 {
+            width: 55%;
         }
 
         .modal {
@@ -148,6 +151,38 @@
 
         .text-right {
             text-align: right;
+        }
+
+        .add-tag {
+            display: inline-block;
+            cursor: pointer;
+            background: #a7a7a7;
+            border: 2px solid #a7a7a7;
+            color: #ffffff;
+            padding: 0 1.5rem;
+            border-radius: 2rem;
+        }
+        .add-tag:after {
+            content: '+';
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .tagValue {
+            display: inline-block;
+            cursor: pointer;
+            background: #dfdfdf;
+            border: 2px solid #dfdfdf;
+            color: #444444;
+            padding: 0 1.5rem;
+            margin: 0 1rem 1rem 0;
+            border-radius: 2rem;
+        }
+
+        .tagValue:after {
+            content: '\00D7';
+            display: inline-block;
+            margin-left: 0.5rem;
         }
 
     </style>
@@ -196,14 +231,31 @@
             ==================================================================================================== */
             function appendReceiptRow(receipt) {
                 $(`
-                        <div id=${receipt.id} class="receipt">
-                            <div class="col col-sm time">${receipt.created}</div>
-                            <div class="col col-md merchant">${receipt.merchant}</div>
-                            <div class="col col-sm amount">${receipt.amount}</div>
-                            <div class="col col-lg tags">${receipt.tags}</div>
-                            <!--<div><span class="receiptTag">t1</span></div>-->
+                    <div id=${receipt.id} class="receipt">
+                        <div class="col col-1 time">${receipt.created}</div>
+                        <div class="col col-2 merchant">${receipt.merchant}</div>
+                        <div class="col col-3 amount">${receipt.amount}</div>
+                        <div class="col col-4 tags" id="${receipt.id + "-tag-col"}">
+                            <div id=${receipt.id + "-tags"}></div>
+                            <a id=${receipt.id + "-add-tag"} class="add-tag">Add</a>
                         </div>
-                        `).appendTo($("#receiptList"));
+                        <!--<div><span class="receiptTag">t1</span></div>-->
+                    </div>
+                `).appendTo($("#receiptList"));
+            }
+
+
+            /* ====================================================================================================
+             * HELPER DISPLAY FUNCTION
+             * Given a receipt object, append a receipt row to the table.
+             * Returns: Nothing. Side-effect: New row added to receipt list table.
+            ==================================================================================================== */
+            function appendTags(receipt) {
+                receipt.tags.forEach(function(tag){
+                    $(`
+                        <span class="tagValue">${tag.name}</span>
+                    `).appendTo($("#" + receipt.id + "-tags"));
+                })
             }
 
 
@@ -233,6 +285,8 @@
                 // For each receipt, add it as a row to the frontend receipt list table
                 receiptsData.forEach(function(receipt){
                     appendReceiptRow(receipt);
+                    appendTags(receipt)
+                    addTagEvent(receipt.id)
                 });
 
                 console.log(receiptsData);
@@ -346,7 +400,27 @@
                 }
             })
 
+            /* ====================================================================================================
+             * EVENT FUNCTION HELPER
+             * Given the id of a receipt, bind its ".add-tag" button to a click function that
+             * adds an input field which sends a PUT request to the "/tags/{tag}" API for the given receipt id
+             * when the user hits their ENTER key.
+            ==================================================================================================== */
+            function addTagEvent(receiptID){
+                var addBtn = $("#" + receiptID + "-add-tag")
+                addBtn.data("hideInput", true);
 
+                addBtn.click(function(){
+                    if (addBtn.data("hideInput")) {
+                        $(`<input id=${receiptID + "-tagName"} class="tag-input"/>`).appendTo("#" + receiptID + "-tag-col");
+                        addBtn.data("hideInput", false);
+                    }
+                    else {
+                        $("#" + receiptID + "-tagName").remove();
+                        addBtn.data("hideInput", true);
+                    }
+                })
+            }
         })
     </script>
 </head>
@@ -357,10 +431,10 @@
     <div id="add-receipt" class="button">+</div>
     <div id="receiptList">
         <div class="receiptListHeader">
-            <div class="col col-sm">Time</div>
-            <div class="col col-md">Merchant</div>
-            <div class="col col-sm">Amount</div>
-            <div class="col col-lg">Tags</div>
+            <div class="col col-1">Time</div>
+            <div class="col col-2">Merchant</div>
+            <div class="col col-3">Amount</div>
+            <div class="col col-4">Tags</div>
         </div>
     </div>
 </DIV>

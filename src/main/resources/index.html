@@ -112,7 +112,7 @@
 
         .modal {
             width: 50rem;
-            height: 30rem;
+            height: 35rem;
             position: fixed;
             top: 50%;
             left: 50%;
@@ -121,6 +121,13 @@
             background: #ffffff;
             box-shadow: 0px 5px 20px rgba(0,0,0,0.25);
             padding: 4rem 5rem 2rem 5rem;
+        }
+
+        .error {
+            font-size: 1.5rem;
+            font-style: italic;
+            color: #FF6961;
+            height: 1.5rem;
         }
 
         .hidden {
@@ -140,6 +147,39 @@
 
             var showModal = false;
 
+            function getTheDamTime(){
+                var dt = new Date();
+                var tm = "";
+
+                if (dt.getHours() < 10)
+                    tm += "0" + dt.getHours();
+                else
+                    tm += dt.getHours();
+                tm += ":";
+                if (dt.getMinutes() < 10)
+                    tm += "0" + dt.getMinutes();
+                else
+                    tm += dt.getMinutes();
+                tm += ":";
+                if (dt.getSeconds() < 10)
+                    tm += "0" + dt.getSeconds();
+                else
+                    tm += dt.getSeconds();
+                return tm;
+            }
+
+            function appendReceiptRow(receiptID, tm, mrch, amnt, tgs){
+                $(`
+                        <div id=${receiptID} class="receipt">
+                            <div class="col col-sm time">${tm}</div>
+                            <div class="col col-lg merchant">${mrch}</div>
+                            <div class="col col-sm amount">${amnt}</div>
+                            <div class="col col-lg tags">${tgs}</div>
+                            <!--<div><span class="receiptTag">t1</span></div>-->
+                        </div>
+                        `).appendTo($("#receiptList"));
+            }
+
             $.getJSON(api+"/receipts", function(receipts){
                 for(var i=0; i < receipts.length; i++) {
                     var receipt = receipts[i];
@@ -147,7 +187,7 @@
 //                        .appendTo($("#receiptList"));
 
                     $(`
-                        <div class="receipt">
+                        <div id=${receipt.id} class="receipt">
                             <div class="col col-sm time">${receipt.created}</div>
                             <div class="col col-lg merchant">${receipt.merchant}</div>
                             <div class="col col-sm amount">${receipt.amount}</div>
@@ -161,14 +201,11 @@
 
 
             $("#add-receipt").click(function(){
-                console.log("Show modal was: " + showModal);
                 if (!showModal) {
                     // If model is currently hidden, show it.
                     $("#receipt-entry").removeClass("hidden")
-
                 }
                 showModal = !showModal
-                console.log("Show modal is: " + showModal);
             })
 
             $("#cancel-receipt").click(function(){
@@ -180,7 +217,47 @@
                     $("#receipt-entry").addClass("hidden");
                 }
             })
-            
+
+            $("#save-receipt").click(function(){
+                var mrch = $("#merchant").val();
+                var amnt = $("#amount").val();
+                var emsg = "";
+                if (mrch == "") {
+                    emsg += "Merchant cannot be empty. "
+                }
+
+                if (isNaN(parseFloat(amnt)) || !isFinite(amnt)){
+                    emsg += "Amount must be a number."
+                }
+
+                // If no errors, then save to database!
+                if (emsg == "") {
+                    $("#receipt-entry-error").text("");
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/receipts",
+                        data: JSON.stringify({"merchant": mrch, "amount": amnt}),
+                        dataType: "json",
+                        contentType: "application/json",
+                        success: function(receiptID){
+                            var tm = getTheDamTime();
+                            appendReceiptRow(receiptID, tm, mrch, amnt, "null");
+                            if (showModal) {
+                                // Clear the text input values
+                                $("#merchant").val("");
+                                $("#amount").val("");
+                                // If model is currently shown, close it.
+                                $("#receipt-entry").addClass("hidden");
+                            }
+                        },
+                    });
+                }
+                else {
+                    $("#receipt-entry-error").text(emsg);
+                }
+            })
+
 
         })
     </script>
@@ -206,6 +283,7 @@
     <input id="merchant" />
     <label for="amount">Amount</label>
     <input id="amount" />
+    <p id="receipt-entry-error" class="error"><br/></p>
     <div class="text-right">
         <div id="cancel-receipt" class="btn">Cancel</div>
         <div id="save-receipt" class="btn btn-primary">Save</div>

@@ -11,8 +11,8 @@ CREATE TABLE receipts (
 CREATE TABLE tags (
   id INT UNSIGNED AUTO_INCREMENT,
   uploaded TIME DEFAULT CURRENT_TIME(),
-  receipt_id INT UNSIGNED,
   name VARCHAR(255),
+  receipt_id INT UNSIGNED,
 
   PRIMARY KEY (id)
 );

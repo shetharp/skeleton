@@ -48,7 +48,6 @@ public class TagDao {
         }
     }
 
-
 //    public List<String> getTagsByReceipt(Integer receiptID) {
 //       List<TagsRecord> tagRecs = dsl
 //                .select(TAGS.NAME)

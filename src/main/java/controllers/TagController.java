@@ -2,6 +2,7 @@ package controllers;
 
 import api.CreateReceiptRequest;
 import api.ReceiptResponse;
+import api.TagResponse;
 import dao.ReceiptDao;
 import dao.TagDao;
 import generated.tables.records.ReceiptsRecord;
@@ -15,7 +16,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
-@Path("/tags/{tag}")
+@Path("/tags")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class TagController {
@@ -26,18 +27,21 @@ public class TagController {
         this.receipts = receipts;
         this.tags = tags;
     }
-//
-//    @POST
-//    public int createReceipt(@Valid @NotNull CreateReceiptRequest receipt) {
-//        return receipts.insert(receipt.merchant, receipt.amount);
-//    }
 
+    @GET
+    public List<TagResponse> getTags() {
+        List<TagsRecord> tagsRecord = tags.getAllTags();
+        return tagsRecord.stream().map(TagResponse::new).collect(toList());
+    }
+
+    @Path("/{tag}")
     @GET
     public List<ReceiptResponse> getReceipts(@PathParam("tag") String tagName) {
         List<ReceiptsRecord> receiptRecords = receipts.getReceiptsByTag(tagName);
         return receiptRecords.stream().map(ReceiptResponse::new).collect(toList());
     }
 
+    @Path("/{tag}")
     @PUT
     public void toggleTag(@PathParam("tag") String tagName, @Valid @NotNull int receiptID) {
         if (receipts.exists(receiptID)) {

@@ -37,12 +37,4 @@ public class ReceiptController {
         return receiptRecords.stream().map(ReceiptResponse::new).collect(toList());
     }
 
-
-//
-//    @Path("/{id}")
-//    @GET
-//    public List<ReceiptResponse> getTags(@PathParam("id") String tagName) {
-//        List<ReceiptsRecord> receiptRecords = tags.getTagsbyReceipt(tagName);
-//        return receiptRecords.stream().map(ReceiptResponse::new).collect(toList());
-//    }
 }

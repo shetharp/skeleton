@@ -10,6 +10,7 @@
             font-family: "Segoe UI", "Helvetica", sans-serif;
             font-size: 10px;
             margin: 5rem;
+            overflow: hidden;
         }
 
         #container {
@@ -113,14 +114,16 @@
         .modal {
             width: 50rem;
             height: 35rem;
+            opacity: 1;
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(1);
 
             background: #ffffff;
-            box-shadow: 0px 5px 20px rgba(0,0,0,0.25);
+            box-shadow: 0px 5px 25px 10px rgba(0,0,0,0.25);
             padding: 4rem 5rem 2rem 5rem;
+            transition: all 300ms ease;
         }
 
         .error {
@@ -131,7 +134,9 @@
         }
 
         .hidden {
-            display: none;
+            opacity: 0.5;
+            top: -50%;
+            transform: translate(-50%, -50%) scale(0.25)
         }
 
         .text-right {
@@ -142,12 +147,20 @@
     <script>
         // This is the idiomatic way to ensure that JQuery does not
         // execute until the page has loaded
-        $(function(){
+        $(function() {
+            /* ====================================================================================================
+             * GLOBAL VARIABLES
+            ==================================================================================================== */
             const api = ""; // <- do not need a root api URL if this page is served directly by the API
+            var hideModal = true;
 
-            var showModal = false;
 
-            function getTheDamTime(){
+            /* ====================================================================================================
+             * HELPER FUNCTION
+             * Get's the current time and formats it cleanly with leading zeros.
+             * Returns: String in the format of HH:MM:SS
+            ==================================================================================================== */
+            function getTheDamTime() {
                 var dt = new Date();
                 var tm = "";
 
@@ -168,25 +181,14 @@
                 return tm;
             }
 
-            function appendReceiptRow(receiptID, tm, mrch, amnt, tgs){
+
+            /* ====================================================================================================
+             * HELPER DISPLAY FUNCTION
+             * Given a receipt object, append a receipt row to the table.
+             * Returns: Nothing. Side-effect: New row added to receipt list table.
+            ==================================================================================================== */
+            function appendReceiptRow(receipt) {
                 $(`
-                        <div id=${receiptID} class="receipt">
-                            <div class="col col-sm time">${tm}</div>
-                            <div class="col col-lg merchant">${mrch}</div>
-                            <div class="col col-sm amount">${amnt}</div>
-                            <div class="col col-lg tags">${tgs}</div>
-                            <!--<div><span class="receiptTag">t1</span></div>-->
-                        </div>
-                        `).appendTo($("#receiptList"));
-            }
-
-            $.getJSON(api+"/receipts", function(receipts){
-                for(var i=0; i < receipts.length; i++) {
-                    var receipt = receipts[i];
-//                    $(`<div class="receipt">${receipt.merchantName}<div><span class="receiptTag">t1</span></div></div>`)
-//                        .appendTo($("#receiptList"));
-
-                    $(`
                         <div id=${receipt.id} class="receipt">
                             <div class="col col-sm time">${receipt.created}</div>
                             <div class="col col-lg merchant">${receipt.merchant}</div>
@@ -195,29 +197,99 @@
                             <!--<div><span class="receiptTag">t1</span></div>-->
                         </div>
                         `).appendTo($("#receiptList"));
-                }
+            }
 
+
+            /* ====================================================================================================
+             * INIT DISPLAY FUNCTION
+             * First, add a "tags" property to each receipt object pulled from the database via API
+             * The "tags" property for each receipt is a list of tag objects associated with the receipt
+             * Next, for each tag object pulled from the database via API, add it to its corresponding receipt
+             * Now, each receipt object should have its "tags" property populated with tags (if it has any)
+             * Finally, for each receipt add a row to the receipts table.
+             * Returns: Nothing. Side-effect: Calls appendReceiptRow which adds a row to the receipts table.
+            ==================================================================================================== */
+            function displayInit(receiptsData, tagsData) {
+                // Give each receiptData a tags property which is a list of its tags.
+                // Initialize them to empty lists
+                receiptsData.forEach(function(receipt){
+                    receipt.tags = [];
+                });
+
+                // For each tag, add the tag to its corresponding receipt.
+                tagsData.forEach(function(tag){
+                    // receiptID is indexed from 1, while the array for receipts is indexed from 0
+                    var matchedReceipt = receiptsData[tag.receiptID - 1];
+                    matchedReceipt.tags.push(tag);
+                });
+
+                // For each receipt, add it as a row to the frontend receipt list table
+                receiptsData.forEach(function(receipt){
+                    appendReceiptRow(receipt);
+                });
+
+                console.log(receiptsData);
+                console.log(tagsData);
+            }
+
+
+            /* ====================================================================================================
+             * INITIAL FUNCTION
+             * Starts by accessing the receipts API endpoint.
+             * Once receipts have successfully loaded, access the tags API endpoint.
+             * After both receipts and tags data are loaded, display the initial frontend elements!
+             * Returns: Nothing. Side-effect: Runs the displayInit function which displays frontend elements.
+            ==================================================================================================== */
+            $.getJSON(api + "/receipts", function (receipts) {
+                // Once all of the receipts data has been loaded, get all the tags data
+                $.getJSON(api + "/tags", function(tags) {
+                    // Once both receipts and tags are loaded, start displaying!
+                    displayInit(receipts, tags);
+                })
             })
 
 
+            /* ====================================================================================================
+             * EVENT FUNCTION
+             * Clicking the [+] add receipt button shows the receipt entry modal.
+             * Returns: Nothing. Side-effect: Sets hideModal to false
+            ==================================================================================================== */
             $("#add-receipt").click(function(){
-                if (!showModal) {
+                if (hideModal) {
                     // If model is currently hidden, show it.
-                    $("#receipt-entry").removeClass("hidden")
+                    $("#receipt-entry").removeClass("hidden");
+                    hideModal = false;
                 }
-                showModal = !showModal
             })
 
+
+            /* ====================================================================================================
+             * EVENT FUNCTION
+             * Clicking the [CANCEL] cancel button in the receipt entry modal clears the values of the input
+             * fields and closes the modal.
+             * Returns: Nothing. Side-effect: Sets showModal to false
+            ==================================================================================================== */
             $("#cancel-receipt").click(function(){
-                if (showModal) {
+                if (!hideModal) {
                     // Clear the text input values
                     $("#merchant").val("");
                     $("#amount").val("");
+                    $("#receipt-entry-error").text("");
+
                     // If model is currently shown, close it.
                     $("#receipt-entry").addClass("hidden");
+                    hideModal = true;
                 }
             })
 
+            /* ====================================================================================================
+             * EVENT FUNCTION
+             * Clicking the [SAVE] save button in the receipt entry modal creates an AJAX POST request to add
+             * the receipt to the database. If it is successful, add the receipt as a new row in the receipt
+             * list table. Then, clear the values of the input fields and closes the modal.
+             * Returns: Nothing.
+             * Side-effect: Adds new receipt entry in database, adds new receipt row, sets showModal to false
+            ==================================================================================================== */
             $("#save-receipt").click(function(){
                 var mrch = $("#merchant").val();
                 var amnt = $("#amount").val();
@@ -242,13 +314,22 @@
                         contentType: "application/json",
                         success: function(receiptID){
                             var tm = getTheDamTime();
-                            appendReceiptRow(receiptID, tm, mrch, amnt, "null");
-                            if (showModal) {
+                            var receipt = {
+                                id: receiptID,
+                                created: tm,
+                                merchant: mrch,
+                                amount: amnt,
+                                tags: []
+                            }
+                            appendReceiptRow(receipt);
+
+                            if (!hideModal) {
                                 // Clear the text input values
                                 $("#merchant").val("");
                                 $("#amount").val("");
                                 // If model is currently shown, close it.
                                 $("#receipt-entry").addClass("hidden");
+                                hideModal = true;
                             }
                         },
                     });

@@ -260,6 +260,20 @@
 
 
             /* ====================================================================================================
+             * HELPER DISPLAY FUNCTION
+             * Given a receipt object, append a receipt row to the table.
+             * Returns: Nothing. Side-effect: New row added to receipt list table.
+//            ==================================================================================================== */
+//            function appendTag(receipt) {
+//                receipt.tags.forEach(function(tag){
+//                    $(`
+//                        <span class="tagValue">${tag.name}</span>
+//                    `).appendTo($("#" + receipt.id + "-tags"));
+//                })
+//            }
+
+
+            /* ====================================================================================================
              * INIT DISPLAY FUNCTION
              * First, add a "tags" property to each receipt object pulled from the database via API
              * The "tags" property for each receipt is a list of tag objects associated with the receipt
@@ -412,7 +426,28 @@
 
                 addBtn.click(function(){
                     if (addBtn.data("hideInput")) {
-                        $(`<input id=${receiptID + "-tagName"} class="tag-input"/>`).appendTo("#" + receiptID + "-tag-col");
+                        $(`<input id=${receiptID + "-tagName"} class="tag-input"/>`)
+                            .appendTo("#" + receiptID + "-tag-col")
+                            .keypress(function(keyboardinput) {
+                                if(keyboardinput.which == 13) {
+                                    var tagName = $("#" + receiptID + "-tagName").val();
+                                    tagName.replace(/\s/g, '');
+                                    /* ======================================================================
+                                     * If the user hits the ENTER key,
+                                     * Make a PUT request to the API for the given tag name and receipt id
+                                    ====================================================================== */
+                                    $.ajax({
+                                        type: "PUT",
+                                        url: "/tags/" + tagName,
+                                        data: JSON.stringify(receiptID),
+                                        dataType: "json",
+                                        contentType: "application/json",
+                                        success: function(tagID){
+                                            console.log(tagID);
+                                        },
+                                    });
+                                }
+                            });
                         addBtn.data("hideInput", false);
                     }
                     else {

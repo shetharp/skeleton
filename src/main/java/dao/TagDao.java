@@ -26,7 +26,7 @@ public class TagDao {
         return dsl.selectFrom(TAGS).fetch();
     }
 
-    public void toggle(Integer receiptID, String tagName){
+    public int toggle(Integer receiptID, String tagName){
         TagsRecord tagsRecord = dsl
                 .selectFrom(TAGS)
                 .where(TAGS.RECEIPT_ID.eq(receiptID))
@@ -35,7 +35,7 @@ public class TagDao {
 
         if (tagsRecord != null) {
             tagsRecord.delete();
-            return;
+            return -1;
         }
         else {
             tagsRecord = dsl
@@ -45,6 +45,7 @@ public class TagDao {
                     .fetchOne();
 
             checkState(tagsRecord != null && tagsRecord.getId() != null, "Insert Tag failed");
+            return tagsRecord.getId();
         }
     }
 

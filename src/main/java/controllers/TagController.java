@@ -43,9 +43,9 @@ public class TagController {
 
     @Path("/{tag}")
     @PUT
-    public void toggleTag(@PathParam("tag") String tagName, @Valid @NotNull int receiptID) {
+    public int toggleTag(@PathParam("tag") String tagName, @Valid @NotNull int receiptID) {
         if (receipts.exists(receiptID)) {
-            tags.toggle(receiptID, tagName);
+            return tags.toggle(receiptID, tagName);
         }
         else {
             throw new NotFoundException("Receipt does not exist.");

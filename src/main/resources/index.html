@@ -446,7 +446,7 @@
 
                 addBtn.click(function(){
                     if (addBtn.data("hideInput")) {
-                        $(`<input id=${receiptID + "-tagName"} class="tag-input"/>`)
+                        $(`<input id=${receiptID + "-tagName"} class="tag_input"/>`)
                             .appendTo("#" + receiptID + "-tag-col")
                             .keypress(function(keyboardinput) {
                                 if(keyboardinput.which == 13) {

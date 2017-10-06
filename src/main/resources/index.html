@@ -65,18 +65,28 @@
             background: #444444;
         }
 
+        .button-header {
+            float: right;
+            overflow: hidden;
+        }
+
         .button{
-            font-size: 2em;
+            font-size: 2rem;
             color: #444444;
             font-weight: bold;
             text-align: center;
             padding: 0;
+            margin: 0;
             border: 4px solid #444444;
             width: 5rem;
             height: 5rem;
-            line-height: 3.25rem;
-            float: right;
+            line-height: 4rem;
+            display: inline-block;
             cursor: pointer;
+        }
+
+        #add-receipt {
+            /*font-size: 2rem;*/
         }
 
         #receiptList {
@@ -184,18 +194,12 @@
         }
 
         video {
-            width: 550px;
-            height: 450px;
-            border: 1px solid black;
+            width: 100%;
         }
 
         #vidwrap {
-            margin: 20px 0;
         }
 
-        #start, #snapshot {
-            height: 3em;
-        }
     </style>
     <script>
         // This is the idiomatic way to ensure that JQuery does not
@@ -205,7 +209,8 @@
              * GLOBAL VARIABLES
             ==================================================================================================== */
             const api = ""; // <- do not need a root api URL if this page is served directly by the API
-            var hideModal = true;
+            var hideReceiptsModal = true;
+            var hideVideoModal = true;
 
 
             /* ====================================================================================================
@@ -352,31 +357,70 @@
                     // Once both receipts and tags are loaded, start displaying!
                     displayInit(receipts, tags);
                 })
-            })
+            });
 
 
             /* ====================================================================================================
              * EVENT FUNCTION
-             * Clicking the [+] add receipt button shows the receipt entry modal.
-             * Returns: Nothing. Side-effect: Sets hideModal to false
+             * Clicking the [camera] start camera button shows the video entry modal.
+             * Returns: Nothing. Side-effect: Sets hideVideoModal to false
             ==================================================================================================== */
-            $("#add-receipt").click(function(){
-                if (hideModal) {
+            $("#start-camera").click(function(){
+                if (hideReceiptsModal && hideVideoModal) {
+                    // If model is currently hidden, show it.
+                    $("#video-entry").removeClass("hidden");
+                    hideVideoModal = false;
+                    startVideo();
+                }
+            });
+
+            /* ====================================================================================================
+             * EVENT FUNCTION
+             * Clicking the [+] add receipt button shows the receipt entry modal.
+             * Returns: Nothing. Side-effect: Sets hideReceiptsModal to false
+            ==================================================================================================== */
+            $("#add-receipt").click(showReceiptModal);
+
+            function showReceiptModal(GCVresponse){
+                if (hideReceiptsModal && hideVideoModal) {
+                    if (typeof GCVresponse === "undefined") {
+
+                    }
+                    else {
+                        $("#merchant").val(GCVresponse.merchant);
+                        $("#amount").val(GCVresponse.amount);
+                    }
                     // If model is currently hidden, show it.
                     $("#receipt-entry").removeClass("hidden");
-                    hideModal = false;
+                    hideReceiptsModal = false;
                 }
-            })
+            }
+
+            /* ====================================================================================================
+             * EVENT FUNCTION
+             * Clicking the [CANCEL] cancel button in the video entry modal stops the camera
+             * and closes the modal.
+             * Returns: Nothing. Side-effect: Sets hideVideoModal to true
+            ==================================================================================================== */
+            $("#cancel-video").click(function(){
+                if (!hideVideoModal) {
+                    // Stop Video tracking!!!
+                    track.stop();
+                    // If model is currently shown, close it.
+                    $("#video-entry").addClass("hidden");
+                    hideVideoModal = true;
+                }
+            });
 
 
             /* ====================================================================================================
              * EVENT FUNCTION
              * Clicking the [CANCEL] cancel button in the receipt entry modal clears the values of the input
              * fields and closes the modal.
-             * Returns: Nothing. Side-effect: Sets showModal to false
+             * Returns: Nothing. Side-effect: Sets hideReceiptsModal to false
             ==================================================================================================== */
             $("#cancel-receipt").click(function(){
-                if (!hideModal) {
+                if (!hideReceiptsModal) {
                     // Clear the text input values
                     $("#merchant").val("");
                     $("#amount").val("");
@@ -384,9 +428,19 @@
 
                     // If model is currently shown, close it.
                     $("#receipt-entry").addClass("hidden");
-                    hideModal = true;
+                    hideReceiptsModal = true;
                 }
-            })
+            });
+
+
+            /* ====================================================================================================
+             * EVENT FUNCTION
+             * Clicking the [Snap!] button in the video entry modal takes a snapshot, passes the image to Google
+             * Cloud Vision, and uses the API response to populate a receipt entry modal.
+            ==================================================================================================== */
+
+            $("#snapshot").click(takeSnapshot);
+
 
             /* ====================================================================================================
              * EVENT FUNCTION
@@ -429,13 +483,13 @@
                             }
                             appendReceiptRow(receipt);
 
-                            if (!hideModal) {
+                            if (!hideReceiptsModal) {
                                 // Clear the text input values
                                 $("#merchant").val("");
                                 $("#amount").val("");
                                 // If model is currently shown, close it.
                                 $("#receipt-entry").addClass("hidden");
-                                hideModal = true;
+                                hideReceiptsModal = true;
                             }
                         },
                     });
@@ -490,72 +544,85 @@
                     }
                 })
             }
-        })
 
-        let imageCapture;
-        let track;
 
-        function attachMediaStream(mediaStream) {
-            $('video')[0].srcObject = mediaStream;
 
-            // Saving the track allows us to capture a photo
-            track = mediaStream.getVideoTracks()[0];
-            imageCapture = new ImageCapture(track);
-        }
 
-        function startVideo() {
-            navigator.mediaDevices.getUserMedia({video: {facingMode: {exact: "environment"}}})
-                .then(attachMediaStream)
-                .catch(error => {
-                    navigator.mediaDevices.getUserMedia({video: true})
-                        .then(attachMediaStream)
-                        .catch(error => {
-                            console.log('you are fooked');
+
+
+            let imageCapture;
+            let track;
+
+            function attachMediaStream(mediaStream) {
+                $('video')[0].srcObject = mediaStream;
+
+                // Saving the track allows us to capture a photo
+                track = mediaStream.getVideoTracks()[0];
+                imageCapture = new ImageCapture(track);
+            }
+
+            function startVideo() {
+                navigator.mediaDevices.getUserMedia({video: {facingMode: {exact: "environment"}}})
+                    .then(attachMediaStream)
+                    .catch(error => {
+                        navigator.mediaDevices.getUserMedia({video: true})
+                            .then(attachMediaStream)
+                            .catch(error => {
+                                console.log('you are fooked');
+                            })
+                    })
+            }
+
+            function takeSnapshot() {
+                // create a CANVAS element that is same size as the image
+                imageCapture.grabFrame()
+                    .then(img => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        const base64EncodedImageData = canvas.toDataURL('image/png').split(',')[1];
+                        $.ajax({
+                            url: "/images",
+                            type: "POST",
+                            data: base64EncodedImageData,
+                            contentType: "text/plain",
+                            success: function() {},
                         })
-                })
-        }
+                            .then(response => {
+                                if (!hideVideoModal) {
+                                    // Stop Video tracking!!!
+                                    track.stop();
+                                    // If model is currently shown, close it.
+                                    $("#video-entry").addClass("hidden");
+                                    hideVideoModal = true;
+                                }
+                                console.log(response);
+                                showReceiptModal(response);
+                            })
+                            .always(() => console.log('request complete'));
 
-        function takeSnapshot() {
-            // create a CANVAS element that is same size as the image
-            imageCapture.grabFrame()
-            .then(img => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
+                        // For debugging, you can uncomment this to see the frame that was captured
+                        // $('BODY').append(canvas);
+                    });
 
-                canvas.getContext('2d').drawImage(img, 0, 0);
-                const base64EncodedImageData = canvas.toDataURL('image/png').split(',')[1];
-                $.ajax({
-                    url: "/images",
-                    type: "POST",
-                    data: base64EncodedImageData,
-                    contentType: "text/plain",
-                    success: function() {},
-               })
-                .then(response => {
-                    $('video').after(`<div>got response: <pre>${JSON.stringify(response)}</pre></div>`);
-                })
-                .always(() => console.log('request complete'));
+            }
 
-                // For debugging, you can uncomment this to see the frame that was captured
-                // $('BODY').append(canvas);
-            });
-
-        }
-
-
-        $(function () {
-            $('#start').on('click', startVideo);
             $('video').on('play', () => $('#snapshot').prop('disabled', false));
-            $('#snapshot').on('click', takeSnapshot);
+
         });
+
     </script>
 </head>
 
 <body>
 <DIV id="container">
     <h1>My receipts</h1>
-    <div id="add-receipt" class="button">+</div>
+    <div class="button-header">
+        <div id="add-receipt" class="button">&#x1F4DD;</div>
+        <div id="start-camera" class="button">&#x1F4F8;</div>
+    </div>
     <div id="receiptList">
         <div class="receiptListHeader">
             <div class="col col-1">Time</div>
@@ -579,12 +646,16 @@
     </div>
 </div>
 
-<button id="start">Start Video</button>
-<button id="snapshot" disabled="true">Take a Snapshot!</button>
-<br>
-<div id="vidwrap">
-    <video autoplay></video>
+<div id="video-entry" class="modal hidden">
+    <div id="vidwrap">
+        <video autoplay></video>
+        <div class="text-right">
+            <div id="cancel-video" class="btn">Cancel</div>
+            <div id="snapshot" disabled="true" class="btn btn-primary">Snap!</div>
+        </div>
+    </div>
 </div>
+
 
 </body>
 

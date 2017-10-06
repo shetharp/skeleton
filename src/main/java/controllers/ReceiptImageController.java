@@ -33,7 +33,7 @@ public class ReceiptImageController {
      * YOU SHOULD MODIFY THIS METHOD TO RETURN A ReceiptSuggestionResponse:
      *
      * public class ReceiptSuggestionResponse {
-     *     String merchantName;
+     *     String merchant;
      *     String amount;
      * }
      */
@@ -47,7 +47,7 @@ public class ReceiptImageController {
             AnnotateImageResponse res = responses.getResponses(0);
 
 
-            String merchantName = null;
+            String merchant = null;
             String amount = null;
 
             // Your Algo Here!!
@@ -57,6 +57,7 @@ public class ReceiptImageController {
                 out.printf("Position : %s\n", annotation.getBoundingPoly());
                 out.printf("Text: %s\n", annotation.getDescription());
 
+                // Got help from ma boi Rongxin
                 String ent = res.getTextAnnotationsList().iterator().next().getDescription();
                 String[] lines = ent.split("\n");
 
@@ -66,11 +67,11 @@ public class ReceiptImageController {
                 for(int i = 0; i < lines.length; i++) {
                     Matcher mt = pt.matcher(lines[i]);
                     if (mt.find()){ amount = mt.group(); }
-                    if (i == 1){ merchantName = lines[i]; }
+                    if (i == 1){ merchant = lines[i]; }
                 }
             }
             // TextAnnotation fullTextAnnotation = res.getFullTextAnnotation();
-            return new ReceiptSuggestionResponse(merchantName, amount);
+            return new ReceiptSuggestionResponse(merchant, amount);
 
         }
     }

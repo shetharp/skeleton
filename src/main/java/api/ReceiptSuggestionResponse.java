@@ -8,14 +8,14 @@ import java.math.BigDecimal;
  */
 public class ReceiptSuggestionResponse {
     @JsonProperty
-    public final String merchantName;
+    public final String merchant;
 
     @JsonProperty
     public final String amount;
 
 
-    public ReceiptSuggestionResponse(String merchantName, String amount) {
-        this.merchantName = merchantName;
+    public ReceiptSuggestionResponse(String merchant, String amount) {
+        this.merchant = merchant;
         this.amount = amount;
     }
 }

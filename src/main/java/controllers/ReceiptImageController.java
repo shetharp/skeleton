@@ -3,10 +3,8 @@ package controllers;
 import api.ReceiptSuggestionResponse;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
-import java.math.BigDecimal;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.*;
@@ -58,22 +56,22 @@ public class ReceiptImageController {
             for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
                 out.printf("Position : %s\n", annotation.getBoundingPoly());
                 out.printf("Text: %s\n", annotation.getDescription());
+
                 String ent = res.getTextAnnotationsList().iterator().next().getDescription();
                 String[] lines = ent.split("\n");
 
-                // Get digits
-                Pattern pt = Pattern.compile("\\d+\\.d+");
+                // Get digits for total payment amount
+                Pattern pt = Pattern.compile("\\d+\\.\\d+");
+
                 for(int i = 0; i < lines.length; i++) {
                     Matcher mt = pt.matcher(lines[i]);
                     if (mt.find()){ amount = mt.group(); }
                     if (i == 1){ merchantName = lines[i]; }
                 }
-
-
             }
-
-            //TextAnnotation fullTextAnnotation = res.getFullTextAnnotation();
+            // TextAnnotation fullTextAnnotation = res.getFullTextAnnotation();
             return new ReceiptSuggestionResponse(merchantName, amount);
+
         }
     }
 }
